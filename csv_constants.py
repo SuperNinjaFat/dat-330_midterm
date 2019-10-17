@@ -19,8 +19,16 @@ def download():
     for name in DISEASES:
         filename = (FILE_PREFIX + name + FILE_POSTFIX)
         downloadTar(filename, (HTTP_PREFIX + name + HTTP_PREPREFIX + filename))
+        print(trytar(filename))
+
+
+def trytar(filename):
+    try:
         tf = tarfile.open(os.path.join(os.path.join(DIR_BASE, 'raw_tar'), filename))
-        tf.extractall(os.path.join(DIR_BASE, 'mutations'))
+    except tarfile.ReadError as e:
+        return e
+    tf.extractall(os.path.join(DIR_BASE, 'mutations'))
+    return filename
 
 
 def downloadTar(output, address):
