@@ -32,21 +32,22 @@ def loadDatasets():
         for i in range(len(file)):
             patient_info[file['patient.bcr_patient_barcode'][i]] = [
                 file['admin.disease_code'][i], file['patient.gender'][i],
-                -file['patient.days_to_birth'][i],
-                file['patient.stage_event.pathologic_stage'][i]]
+                -file['patient.days_to_birth'][i]]
+        #file['patient.stage_event.pathologic_stage'][i] - Not in some files
         #Attach mutation data to matching clinical data
         for filename in glob.glob('mutations/gdac.broadinstitute.org_' + disease + '.Mutation_Packager_Calls.Level_3.2016012800.0.0/*.maf.txt'):
             file = pd.read_csv(filename, sep='\\t')
             try:
-                patient_info[filename.split('\\')[-1].split('.')[0][:-3].lower()][4] += (len(file))
+                patient_info[filename.split('\\')[-1].split('.')[0][:-3].lower()][3] += (len(file))
             except IndexError:
                 patient_info[filename.split('\\')[-1].split('.')[0][:-3].lower()].append(len(file))
-        print(disease)
-    patient_info = {k:v for k,v in patient_info.items() if len(v) > 4}
+            except KeyError:
+                continue
+    patient_info = {k:v for k,v in patient_info.items() if len(v) > 3}
     #Transfer patient data to dataframe
     patient_data = pd.DataFrame(data=patient_info)
     patient_data = patient_data.transpose()
-    patient_data = patient_data.rename(columns={0: 'Disease', 1: 'Gender', 2: 'Age', 3: 'Stage', 4:'Mutations'})
+    patient_data = patient_data.rename(columns={0: 'Disease', 1: 'Gender', 2: 'Age', 3:'Mutations'})
 
     #Weigh mutation data
     avg_mut = patient_data['Mutations'].mean()
@@ -61,7 +62,7 @@ def loadDatasets():
 
     #Encode non-int columns
     for x in range(len(patient_data.columns)):
-        if x not in [2, 4]:
+        if x not in [2, 3]:
             patient_data.iloc[:,x] = le.fit_transform(patient_data.iloc[:,x])
 
     y = patient_data.iloc[:,-1].astype('int')
@@ -97,13 +98,14 @@ def decision_tree(X_test, y_test, X_train, y_train, k):
 
 if __name__ == "__main__":
     start = time.time()
-    X_test, y_test, X_train, y_train = loadDatasets()
+    for i in range(10):
+        X_test, y_test, X_train, y_train = loadDatasets()
 
-    # KNN
-    k_neighbors(X_test, y_test, X_train, y_train, 3)
+        # KNN
+        k_neighbors(X_test, y_test, X_train, y_train, 3)
 
-    # Decision trees
-    decision_tree(X_test, y_test, X_train, y_train, 6)
+        # Decision trees
+        decision_tree(X_test, y_test, X_train, y_train, 6)
     print("(Time to complete: " + str(round(time.time() - start, 1)) + "s)")
 
 
