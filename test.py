@@ -12,6 +12,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 
 def loadDatasets():
@@ -68,6 +69,19 @@ def k_neighbors(X_test, y_test, X_train, y_train, k):
     accuracy = (correct / float(len(y_test))) * 100.0
     print('KNN Accuracy: ' + repr(round(accuracy, 2)) + '%')
 
+def decision_tree(X_test, y_test, X_train, y_train, k):
+    dt = DecisionTreeClassifier(max_depth=k, random_state=1)
+    dt.fit(X_train, y_train)
+    y_dt = dt.predict(X_test)
+
+    correct = 0
+    for i in range(len(y_dt)):
+        if y_test.iloc[i] == y_dt[i]:
+            correct += 1
+    accuracy = (correct / float(len(y_test))) * 100.0
+    print('Decision Tree Accuracy: ' + repr(round(accuracy, 2)) + '%')
+
+
 if __name__ == "__main__":
     #If you are... (gender, ethnicity, age, etc...)... you are more/less likely to have
     #more mutations, mutations for... (gene types)... genes.
@@ -75,6 +89,12 @@ if __name__ == "__main__":
     start = time.time()
     X_test, y_test, X_train, y_train = loadDatasets()
     k_neighbors(X_test, y_test, X_train, y_train, 3)
+    print("(Time to complete: " + str(round(time.time() - start, 1)) + "s)")
+
+    # Decision trees
+    start = time.time()
+    X_test, y_test, X_train, y_train = loadDatasets()
+    decision_tree(X_test, y_test, X_train, y_train, 6)
     print("(Time to complete: " + str(round(time.time() - start, 1)) + "s)")
 
 
