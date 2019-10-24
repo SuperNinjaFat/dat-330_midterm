@@ -40,6 +40,9 @@ def loadDatasets():
                 patient_info[filename.split('\\')[-1].split('.')[0][:-3].lower()][3] += (len(file))
             except IndexError:
                 patient_info[filename.split('\\')[-1].split('.')[0][:-3].lower()].append(len(file))
+            except KeyError:
+                continue
+        print(disease)
     patient_info = {k:v for k,v in patient_info.items() if len(v) > 3}
     #Transfer patient data to dataframe
     patient_data = pd.DataFrame(data=patient_info)
