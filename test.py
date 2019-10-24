@@ -32,8 +32,7 @@ def loadDatasets():
         for i in range(len(file)):
             patient_info[file['patient.bcr_patient_barcode'][i]] = [
                 file['admin.disease_code'][i], file['patient.gender'][i],
-                -file['patient.days_to_birth'][i]]
-        #file['patient.stage_event.pathologic_stage'][i] - Not in some files
+                round(file['patient.days_to_birth'][i]/-365, 2)]
         #Attach mutation data to matching clinical data
         for filename in glob.glob('mutations/gdac.broadinstitute.org_' + disease + '.Mutation_Packager_Calls.Level_3.2016012800.0.0/*.maf.txt'):
             file = pd.read_csv(filename, sep='\\t')
@@ -41,8 +40,6 @@ def loadDatasets():
                 patient_info[filename.split('\\')[-1].split('.')[0][:-3].lower()][3] += (len(file))
             except IndexError:
                 patient_info[filename.split('\\')[-1].split('.')[0][:-3].lower()].append(len(file))
-            except KeyError:
-                continue
     patient_info = {k:v for k,v in patient_info.items() if len(v) > 3}
     #Transfer patient data to dataframe
     patient_data = pd.DataFrame(data=patient_info)
@@ -62,12 +59,12 @@ def loadDatasets():
 
     #Encode non-int columns
     for x in range(len(patient_data.columns)):
-        if x not in [2, 3]:
+        if x not in [2, 4]:
             patient_data.iloc[:,x] = le.fit_transform(patient_data.iloc[:,x])
 
     y = patient_data.iloc[:,-1].astype('int')
     X = patient_data.drop(['Mutations'], axis=1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)
 
     return X_test, y_test, X_train, y_train
 
@@ -98,14 +95,13 @@ def decision_tree(X_test, y_test, X_train, y_train, k):
 
 if __name__ == "__main__":
     start = time.time()
-    for i in range(10):
-        X_test, y_test, X_train, y_train = loadDatasets()
+    X_test, y_test, X_train, y_train = loadDatasets()
 
-        # KNN
-        k_neighbors(X_test, y_test, X_train, y_train, 3)
+    # KNN
+    k_neighbors(X_test, y_test, X_train, y_train, 3)
 
-        # Decision trees
-        decision_tree(X_test, y_test, X_train, y_train, 6)
+    # Decision trees
+    decision_tree(X_test, y_test, X_train, y_train, 6)
     print("(Time to complete: " + str(round(time.time() - start, 1)) + "s)")
 
 
